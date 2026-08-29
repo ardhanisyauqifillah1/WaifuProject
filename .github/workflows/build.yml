@@ -18,12 +18,26 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build Debug APK
-        run: gradle assembleDebug
+      - name: Find and Build APK
+        run: |
+          echo "Mencari lokasi project..."
+          find . -name "build.gradle"
+          
+          # Cari folder yang punya build.gradle di dalam app, lalu build dari sana
+          APP_DIR=$(find . -path "*/app/build.gradle" -exec dirname {} \;)
+          if [ -n "$APP_DIR" ]; then
+            PROJECT_ROOT=$(dirname "$APP_DIR")
+            echo "Project ditemukan di: $PROJECT_ROOT"
+            cd "$PROJECT_ROOT"
+            gradle assembleDebug
+          else
+            echo "Mencoba build langsung..."
+            gradle assembleDebug
+          fi
 
       - name: Upload APK Result
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: **/app/build/outputs/apk/debug/app-debug.apk
           
